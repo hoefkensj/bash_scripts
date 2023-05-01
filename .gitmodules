@@ -1,0 +1,12 @@
+[submodule "Bash_SourceDir"]
+	path = Bash_SourceDir
+	url = https://github.com/hoefkensj/Bash_SourceDir.git
+[submodule "bash_MiniToolkit"]
+	path = bash_MiniToolkit
+	url = https://github.com/hoefkensj/bash_MiniToolkit.git
+[submodule "bash_LocalRC"]
+	path = bash_LocalRC
+	url = https://github.com/hoefkensj/bash_LocalRC.git
+[submodule "bash_history"]
+	path = bash_history
+	url = https://github.com/hoefkensj/bash_history.git
