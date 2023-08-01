@@ -9,13 +9,13 @@ function _install() {
 	for FILE in "${FILELIST[@]}" ; do
 		DST=$( echo "${DSTROOT}/${FILE}")
 		SRC=$( echo "${SRCROOT}/${FILE}")
-		printf '%s < - < - < %s \n'  "${SRC}" "${DST}"
-		cp -v $SRC $DST
+		printf '%s > - || - < %s \n'  "${SRC}" "${DST}"
+		cp -vf $SRC $DST
 	done;
 }
 function LocalRC() {
-	INSTALL_DIR="$INSTALL_DIR/config/rc/bash/"
-	mkdir -p $INSTALL_DIR
+	INSTALL_DIR="$1/config/rc/bash/"
+	mkdir -pvf $INSTALL_DIR
 	SRCROOT=$( realpath "$PWD/bash_LocalRC/src/bash_LocalRC" )
 	DSTROOT=$( realpath "$INSTALL_DIR" )
 	DIRLIST=($( find "$SRCROOT"  -type d -printf '%P\n' ))
@@ -25,7 +25,10 @@ function LocalRC() {
 function sourcedir() {
 	cd Bash_SourceDir
 }
-ROOT=$1
-INSTALL_DIR="$ROOT/opt/local/"
-LocalRC 	
+ROOT="/"
+[[ -z "$1" ]] && ROOT=$1
+INSTALL_DIR="opt/local"
+INSTALL_DIR="${ROOT}${INSTALL_DIR}"
+LocalRC "$INSTALL_DIR" 	
+./Bash_SourceDir/install.sh
 
