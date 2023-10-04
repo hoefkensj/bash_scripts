@@ -30,5 +30,5 @@ ROOT="/"
 INSTALL_DIR="opt/local"
 INSTALL_DIR="${ROOT}${INSTALL_DIR}"
 LocalRC "$INSTALL_DIR" 	
-./Bash_SourceDir/install.sh
+# ./Bash_SourceDir/install.sh
 
