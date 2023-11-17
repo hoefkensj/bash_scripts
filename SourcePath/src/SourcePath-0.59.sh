@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 # ############################################################################
 # # PATH: /etc/profile.d                        AUTHOR: Hoefkens.J@gmail.com #
-# # FILE: sourcepath.sh                                0v99 - 2023.05.22 #
+# # FILE: sourcepath.sh                                     0v99 - 2023.1.10 #
 # ############################################################################
-#
+#\
 function sourcepath { 	
 	local VERSION="0.99"
 	local WARNING="WARNING: This File Needs to be Sourced not Executed ! ";
+	local ASK CASE SELECTED I;
 	local HELP="""${FUNCNAME[0]} [-h]|[-iqd] [DIR] [MATCH]
 
 ARGS:
@@ -22,11 +23,6 @@ OPTIONS:
     -q   --quiet      Quiet/Silent/Script, Dont produce any output
     -d   --debug      Enable xtrace for this script
     -w   --warning    Shows $WARNING
-
-RECOMENDED:
-
-    Make Sourcedir availeble as a command:
-    su -c 'cp -v ./sourcedir.sh /etc/profile.d/
 
 EXAMPLES:
 
@@ -48,11 +44,12 @@ EXAMPLES:
 DEFAULTS:
 
     -MATCH: '/[0-9]+[_-]*.*\.(sh|bash|bashrc|rc|conf|cfg)$' 
-    -DIR: '$PWD'
+    -DIR: '\$PWD'
 
 """;
 	# set -o errexit
 	# set -o nounset
+	# set -o xtrace
 	function batcat () {
 		function _bat() {
 			local theme paging batopts 
@@ -65,27 +62,29 @@ DEFAULTS:
 		lang="$1" 
 		shift 1 #remove that from the args as cat doesnt need it
 		[[ -n "$( which bat )" ]] &&   _bat "$@"
-		[[ -z "$( which bat )" ]] && echo $( printf '%s' "$@" ) | $( printf '%s' "$(which cat)"  ) 
+		[[ -z "$( which bat )" ]] && echo "$@"  | $( printf '%s' "$(which cat)"  ) 
+		unset -f _bat
 	};
 
-	function _main ()  
-	{ 
+	function _main (){ 
 
 		function _sourcefiles () { 
 			function _sourcefile ()	{ 
+				local SUCCESS FILEN 
+				[[ -z "$ERRN" ]] && ERRN= 0
 				FILEN="$2"
 				FILEN=$((FILEN-ERRN))
 				source "$1" &>/dev/null 
 				SUCCESS="$?"
 				[[ "$SUCCESS" == "0" ]] && _progress "$1" "$GC" 2 "$2" 
-				[[ "$SUCCESS" != "0" ]] && _failfile "$1" 
+				[[ "$SUCCESS" != "0" ]] && printf $1 && _failfile "$1" 
 			};
 			function _failfile() {
 				ERRN=$((ERRN+1))
- 				echo "" #newline
+ 				printf '\x1b[%sE' $ERRN #newline
  				_mask 0 "$GP" "$GS" "$GN" "$N" 1 1 "Failed  :" #mask
  				_progress "$1" "$GC" 1 "$ERRN"
- 				printf '\x1b[F'
+ 				printf '\x1b[%sF' $ERRN #newline
 			};
 			for CONF in $SELECTED;
 			do
@@ -126,19 +125,20 @@ DEFAULTS:
 			toprint=$1
 			while true  ; do
 				[[ ${#toprint} > 50 ]]  && toprint=".../${toprint#*/*/}" 
-				[[ ${#toprint} < 51 ]] && break ;
+				[[ ${#toprint} < 50 ]]  && toprint="$toprint "
+				[[ ${#toprint} == 50 ]]  && break;
 			done		
 			_Gm  12  1  3   "$toprint  "
 			_Gm "$2" 1 "$3" "$4" 
 			_G 80
 		};		
 		
-		local MATCH SRC N W GP GS GC GN ERRN FILEN ;
+		local MATCH SRC N W GP GS GC GN ERRN FILEN SELECTED ;
 		
 		SRC=$(realpath "${1}");
 		[[ -n "$2" ]] && MATCH="$2" || MATCH='/[0-9]+[_-]*.*\.(sh|bash|bashrc|rc|conf|cfg)$';
 		I=0;
-		SELECTED=$( find "$SRC" 2>/dev/null |grep -E "$MATCH" );
+		SELECTED=$( find "$SRC" 2>/dev/null |grep $CASE -E "$MATCH" );
 		[[ -n "$SELECTED" ]] && N=$( echo "$SELECTED" |wc -l );
 		W="${#N}";
 		GP=$((80-10-W*2))
@@ -148,16 +148,17 @@ DEFAULTS:
 		ERRN=0
 		_mask 0 "$GP" "$GS" "$GN" "$N" 0 7 "Sourcing:";
 		_sourcefiles ;
-		_mask 0 "$GP" "$GS" "$GN" "$N" 0 7 "Sourced :"
+		_mask 0 "$GP" "$GS" "$GN" "$N" 0 7 "Sourced :";
 		_progress "$SRC" "$GC" 2 
 		_Gm "$((80-5))" 1 32 "DONE"
 		[[ "ERRN" != 0 ]] && printf '\x1b[E'
 		echo
-		};
-		local CASE SELECTED I;
+	};
+	function sourcepath_cli() {
+
 		case "$1" in 
 			-h | --help | '')
-				batcat help "$HELP" 
+				batcat help "$HELP" 2>>/dev/null
 			;;
 			-d | --debug)
 				shift && set -o xtrace && ${FUNCNAME[0]} "$@"
@@ -168,6 +169,9 @@ DEFAULTS:
 			-i | --nocase)
 				shift 1 && CASE="-i" && ${FUNCNAME[0]} "$@"
 			;;
+			-a | --ask)
+				shift 1 && ASK=1 && ${FUNCNAME[0]} "$@"
+			;;
 			-w | --warning)
 					batcat  help  "\x1b[1;31m$WARNING" >> /dev/stderr
 			;;
@@ -175,7 +179,9 @@ DEFAULTS:
 				_main "$@"
 			;;
 		esac;
-		unset _m _G _progress _mask _state _sourcefiles _main _cat
+	};
+	sourcepath_cli $@
+	unset -f batcat _main  _sourcefiles  _m _G _progress _mask _state sourcepath_cli
 }
 #make sure its sourced not executed
 (return 0 2>/dev/null) || sourcepath --warning

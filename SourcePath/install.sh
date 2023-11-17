@@ -4,15 +4,23 @@
 # # FILE: install.sh                                   0v7 - 2023.04.26
 # ############################################################################
 #
-INSTALLDIR=/opt/local/scripts/bash/SourcePath/
-mkdir -p $INSTALLDIR
-latest=$(ls "$PWD/src/SourcePath-"*|sort -n |tail -n 1 )
-cp $latest $INSTALLDIR
-cd $INSTALLDIR
-installed=$(ls "$PWD/SourcePath-"*|sort -n |tail -n 1 )
-ln -rsvf "$installed" "$PWD/SourcePath.sh"
-ln -svf "$PWD/SourcePath.sh" "/etc/profile.d/SourcePath.sh"
-source "/etc/profile.d/SourcePath.sh"
-sourcepath
-echo "Symlink installed in : /etc/profile.d/" 
-unset latest
+PKGNAME="SourcePath"
+FNCNAME="sourcepath"
+
+function install_me() {
+	local INSTALLDIR PKGDIR latest installed
+	[[ -z $INSTALLDIR ]] && INSTALLDIR="/opt/local/scripts/bash"
+	PKGDIR="${INSTALLDIR}/${PKGNAME}"
+	mkdir -vp $PKGDIR
+	latest=$(ls -1 "$PWD/src/SourcePath-"*|sort -n |tail -n 1 )
+	cp -vf $latest $PKGDIR
+	cd $PKGDIR
+	installed=$(ls "$PWD/SourcePath-"*|sort -n |tail -n 1 )
+	ln -rsvf "$installed" "$PWD/SourcePath.sh"
+	ln -svf "$PWD/SourcePath.sh" "/etc/profile.d/SourcePath.sh"
+	source "/etc/profile.d/SourcePath.sh"
+	$FNCNAME
+	echo "Symlink installed in : /etc/profile.d/" 
+}
+install_me
+unset PKGNAME FNCNAME
