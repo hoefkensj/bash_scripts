@@ -33,10 +33,28 @@ DIR:
 MATCH:
     Second Argument to the function , is fed directly into 'grep -E ' for 
     matching filenames found in <DIR>, see [EXAMPLES] for common use cases.
-    the string that is matched against is the full (real) path of the files
+    the string that is matched against is the full (real) path of the filess
+
+
+WARNING:
+
+- GLOBBING
+     globbing does not work for filenames appended to the dir.
+
+I :  if you want to source all .sh files in ./bashrc/ :
+
+sourcepath ~/.bashrc/*.sh     - this won't work!
+sourcepath ~/.bashrc '*.sh$'  - this will:
+
+- shell globbing does work in the path 
+- shell globbing also works outside the '' of the regex <MATCH>
+
+sourcepath ~/.env/*.d/ '*.sh$'
+sourcepath ~/.env/bash.d/ '^[0-9]{2}'_*
+ 
+
 
 EXAMPLES:
-
 - Source files in ~/.config/bashrc/ that end in '.bashrc'
     ...and (-q) do not produce any output:
 
@@ -48,7 +66,7 @@ sourcepath -q ~/.config/bashrc/ '.*\.bashrc'
 sourcepath -i .env '^config.*'
 
 - Source all files in '~/.bash_aliasses/' starting with 2 numbers,
-...followed by an '_'. this matches '00_file.alias' but not '99file'
+...followed by an '_'. this matches '00_file.alias' but not '99file' or '.00_file'
 
 sourcepath ~/.bash_aliasses/ '\/[0-9]{2}_.*$'  :
 
@@ -85,18 +103,23 @@ ${FUNCNAME[0]} v ${VERSION}
 	};
 
 	function bash_shorten_path() {
-		local $_PATH $_LEN
-		_PATH=$1
+		local _PATH _LEN
+		_BASE=$(basename $1)
+		_DIR=$(dirname $1)
+		_PATH=$_DIR
 		_LEN=$2
 		while true  ; do
-			[[ ${#_PATH} >  $_LEN ]]  && _PATH=".../${_PATH#*/*/}" 
-			[[ ${#_PATH} <  $_LEN ]]  && _PATH="${_PATH} "
+			[[ ${#_PATH} > $_LEN ]]  && _PATH="${_PATH#*/*/}" 
+			[[ ${#_PATH} < $_LEN ]]  && _PATH="${_PATH} "
 			[[ ${#_PATH} == $_LEN ]]  && break;
+			sleep 0.001
 		done
-		printf '%s' "${_PATH}"	
+		printf '%s%s' "$PFX" "${_PATH}"	
+
 	};
 
 	function _main (){
+		local COUNT SUCCESS DONE FAIL SCONF
 
 		function _sourcefile () {
 			source "$1" 2>/dev/null
@@ -104,7 +127,6 @@ ${FUNCNAME[0]} v ${VERSION}
 		};
 
 		function _sourcefiles () {
-			local COUNT SUCCESS DONE FAIL SCONF
 			DONE=0
 			FAIL=0
 			COUNT=0
@@ -161,7 +183,7 @@ ${FUNCNAME[0]} v ${VERSION}
  		_m='\x1b[%s;3%sm%s\x1b[m'
 		_Gm="\x1b[%sG${_m}\x1b[G"
 		SRC=$(realpath "${1}");
-		SSRC=$( bash_shorten_path "${SRC}" 50 )
+		SSRC=$( bash_shorten_path "${SRC}" 47 )
 		[[ -n "$2" ]] && MATCH="$2" || MATCH='/[0-9]+[_-]*.*\.(sh|bash|bashrc|rc|conf|cfg)$';
 		SELECTED=$( find "$SRC" 2>/dev/null |grep -E $CASE "$MATCH" );
 		[[ -n "$SELECTED" ]] && N=$( echo "$SELECTED" |wc -l );
