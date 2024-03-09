@@ -66,7 +66,7 @@ sourcepath -q ~/.config/bashrc/ '.*\.bashrc'
 sourcepath -i .env '^config.*'
 
 - Source all files in '~/.bash_aliasses/' starting with 2 numbers,
-...followed by an '_'. this matches '00_file.alias' but not '99file' or '.00_file'
+...followed by an '_'. this matches '00_file.alias' but not '99file' or '.00_filea'
 
 sourcepath ~/.bash_aliasses/ '\/[0-9]{2}_.*$'  :
 
@@ -119,7 +119,6 @@ ${FUNCNAME[0]} v ${VERSION}
 	};
 
 	function _main (){
-		local COUNT SUCCESS DONE FAIL SCONF
 
 		function _sourcefile () {
 			source "$1" 2>/dev/null
@@ -127,6 +126,7 @@ ${FUNCNAME[0]} v ${VERSION}
 		};
 
 		function _sourcefiles () {
+			local COUNT SUCCESS DONE FAIL SCONF
 			DONE=0
 			FAIL=0
 			COUNT=0
@@ -136,7 +136,7 @@ ${FUNCNAME[0]} v ${VERSION}
 				SCONF="$( bash_shorten_path $CONF 50 )"
 				[[ -e "$CONF" ]] &&  _sourcefile "$CONF"  2>/dev/null
 				[[ "$SUCCESS" == "true" ]] && DONE=$((DONE +1 )) && print_progress $DONE $SCONF
-				[[ "$SUCCESS" == "false" ]] && FAIL=$((FAIL +1 )) && print_fail $COUNT $SCONF $FAIL
+				[[ "$SUCCESS" == "false" ]] && FAIL=$((FAIL +1 )) && print_fail $COUNT $CONF $FAIL
 			done
 		 	print_progress $DONE $SSRC
 			Y=$((FAIL+2))
